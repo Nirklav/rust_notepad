@@ -56,12 +56,29 @@ impl EditableText for PasswordText {
 
     fn edit(&mut self, range: Range<usize>, new: impl Into<String>) {
         let new = new.into();
-        let range = Range {
-            start: range.start / PASSWORD_CHAR.len_utf8(),
-            end: range.end / PASSWORD_CHAR.len_utf8()
-        };
+        let password_char_len = PASSWORD_CHAR.len_utf8();
+        let symbols_start_index = range.start / password_char_len;
+        let symbols_end_index = range.end / password_char_len;
+        let mut index = 0;
+        let mut start_index = 0;
+        let mut end_index = 0;
 
-        self.clear.replace_range(range, &new);
+        let chars = self.clear.chars();
+        for char in chars {
+            let len = char.len_utf8();
+
+            if symbols_start_index > index {
+                start_index += len;
+            }
+
+            if symbols_end_index > index {
+                end_index += len;
+            }
+
+            index += 1;
+        }
+
+        self.clear.replace_range(start_index..end_index, &new);
         self.set_hidden();
     }
 
