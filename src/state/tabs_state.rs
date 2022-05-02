@@ -56,6 +56,7 @@ impl TabsState {
         for (key, _) in &self.tabs {
             keys.push(*key);
         }
+        keys.sort();
         keys
     }
 
