@@ -1,6 +1,7 @@
 #![windows_subsystem = "windows"]
 
 extern crate core;
+extern crate open;
 extern crate crypto;
 extern crate getrandom;
 

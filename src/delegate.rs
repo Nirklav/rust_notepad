@@ -1,4 +1,4 @@
-use druid::{AppDelegate, Code, Command, commands, DelegateCtx, Env, Event, Handled, KeyEvent, Target, WindowHandle, WindowId};
+use druid::{AppDelegate, Command, commands, DelegateCtx, Env, Handled, Target, WindowHandle, WindowId};
 use crate::{AppState, windows};
 
 pub struct Delegate {
@@ -14,35 +14,27 @@ impl Delegate {
 }
 
 impl AppDelegate<AppState> for Delegate {
-    fn event(
-        &mut self,
-        _ctx: &mut DelegateCtx,
-        _id: WindowId,
-        event: Event,
-        data: &mut AppState,
-        _env: &Env) -> Option<Event> {
-
-        match &event {
-            Event::KeyDown(KeyEvent { code: Code::KeyS, mods, .. }) if mods.ctrl() => {
-                let _ = data.tabs.save();
-            },
-            _ => { }
-        };
-
-        Some(event)
-    }
-
     fn command(
         &mut self,
         ctx: &mut DelegateCtx,
         _target: Target,
         cmd: &Command,
-        _state: &mut AppState,
+        state: &mut AppState,
         _env: &Env) -> Handled {
 
         match  &cmd {
             c if c.is(commands::NEW_FILE) => {
                 ctx.new_window(windows::new_file_window::new());
+                Handled::Yes
+            },
+            c if c.is(commands::SAVE_FILE) => {
+                if let Err(e) = state.tabs.save() {
+                    ctx.new_window(windows::information_window::new(format!("Error: {}", e)));
+                }
+                Handled::Yes
+            },
+            c if c.is(commands::SHOW_ABOUT) => {
+                ctx.new_window(windows::about_window::new());
                 Handled::Yes
             },
             _ => {
@@ -58,19 +50,19 @@ impl AppDelegate<AppState> for Delegate {
         _data: &mut AppState,
         _env: &Env,
         _ctx: &mut DelegateCtx) {
-        if let None = self.main_id {
+        if self.main_id.is_none() {
             self.main_id = Some(id.clone());
         }
     }
 
     fn window_removed(
         &mut self,
-        _id: WindowId,
+        id: WindowId,
         data: &mut AppState,
         _env: &Env,
         _ctx: &mut DelegateCtx) {
-        if let Some(id) = self.main_id {
-            if id == id {
+        if let Some(main_id) = self.main_id {
+            if id == main_id {
                 data.tabs.save().expect("Cannot save file");
             }
         }

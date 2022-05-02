@@ -98,7 +98,7 @@ impl TabsState {
         Ok(())
     }
 
-    pub fn save(&self) -> Result<(), AppError> {
+    pub fn save(&mut self) -> Result<(), AppError> {
         for (_, tab) in &self.tabs {
             tab.save()?;
         }
@@ -106,6 +106,7 @@ impl TabsState {
         for file_name in &self.to_remove {
             fs::remove_file(&file_name)?;
         }
+        self.to_remove.clear();
 
         Ok(())
     }

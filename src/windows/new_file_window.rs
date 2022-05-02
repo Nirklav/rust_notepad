@@ -35,7 +35,7 @@ fn clear_ui() -> impl Widget<AppState> {
             .with_child(SizedBox::new(Button::new("Ok")
                 .on_click(|ctx, state: &mut AppState, _env| {
                     if let Err(e) = state.add_new_clear_tab() {
-                        ctx.new_window(windows::dialog_window::new(format!("Error: {}", e)));
+                        ctx.new_window(windows::information_window::new(format!("Error: {}", e)));
                     };
                     ctx
                         .window()
@@ -69,7 +69,7 @@ fn protected_ui() -> impl Widget<AppState> {
             .with_child(SizedBox::new(Button::new("Ok")
                 .on_click(|ctx, state: &mut AppState, _env| {
                     if let Err(e) = state.add_new_protected_tab() {
-                        ctx.new_window(windows::dialog_window::new(format!("Error: {}", e)));
+                        ctx.new_window(windows::information_window::new(format!("Error: {}", e)));
                     };
                     ctx
                         .window()

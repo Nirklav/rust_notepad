@@ -5,8 +5,11 @@ use crate::*;
 use crate::ui::tabs_dynamic_policy::TabsDynamicPolicy;
 
 pub fn new() -> WindowDesc<AppState> {
+    let size = (1400.0, 800.0);
     WindowDesc::new(ui())
         .title("Notepad")
+        .window_size(size)
+        .set_position(windows::primary_screen_center(size))
         .menu(menu)
 }
 
@@ -21,6 +24,9 @@ fn menu(_id: Option<WindowId>, _state: &AppState, _env: &Env) -> Menu<AppState> 
             .entry(MenuItem::new("New file")
                 .command(commands::NEW_FILE)
                 .hotkey(RawMods::Ctrl, "n"))
+            .entry(MenuItem::new("Save all")
+                .command(commands::SAVE_FILE)
+                .hotkey(RawMods::Ctrl, "s"))
             .entry(MenuItem::new("Exit")
                 .command(commands::CLOSE_ALL_WINDOWS)))
         .entry(MenuItem::new("About")

@@ -65,8 +65,7 @@ impl TabState {
         let path = TabState::path(&self.name);
         let del_path = TabState::del_path(&self.name);
 
-        fs::copy(&path, &del_path)?;
-        fs::remove_file(&path)?;
+        fs::rename(&path, &del_path)?;
 
         Ok(del_path)
     }
