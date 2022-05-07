@@ -8,6 +8,7 @@ use crate::ui::lens::tab_state_to_text_lens::TabStateToTextLens;
 use crate::ui::lens::tabs_tate_to_tab_state_lens::TabsStateToTabStateLens;
 use crate::ui::tab_close_button::close_button;
 use crate::{AppState, windows};
+use crate::ui::copy_cut_paste_controller::CopyCutPasteController;
 
 #[derive(Clone, Data)]
 pub struct TabsDynamicPolicy;
@@ -21,6 +22,7 @@ impl TabsDynamicPolicy {
             .with_line_wrapping(false)
             .with_font(font)
             .expand()
+            .controller(CopyCutPasteController)
             .lens(TabStateToTextLens::new());
 
         Box::new(text_box)
