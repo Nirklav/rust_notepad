@@ -1,6 +1,6 @@
 use druid::Lens;
 use crate::state::tab_content::TabContent;
-use crate::state::tab_state::TabState;
+use crate::state::tab::Tab;
 
 pub struct TabStateToTextLens;
 
@@ -10,8 +10,8 @@ impl TabStateToTextLens {
     }
 }
 
-impl Lens<TabState, String> for TabStateToTextLens {
-    fn with<V, F: FnOnce(&String) -> V>(&self, tab: &TabState, f: F) -> V {
+impl Lens<Tab, String> for TabStateToTextLens {
+    fn with<V, F: FnOnce(&String) -> V>(&self, tab: &Tab, f: F) -> V {
         match &tab.content {
             TabContent::Clear { text } => f(text),
             TabContent::Opened { text, .. } => f(text),
@@ -19,7 +19,7 @@ impl Lens<TabState, String> for TabStateToTextLens {
         }
     }
 
-    fn with_mut<V, F: FnOnce(&mut String) -> V>(&self, tab: &mut TabState, f: F) -> V {
+    fn with_mut<V, F: FnOnce(&mut String) -> V>(&self, tab: &mut Tab, f: F) -> V {
         match &mut tab.content {
             TabContent::Clear { text } => f(text),
             TabContent::Opened { text, .. } => f(text),

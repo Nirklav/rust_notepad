@@ -1,4 +1,4 @@
-use druid::{Data};
+use druid::Data;
 use crate::ui::password_text::PasswordText;
 
 #[derive(Clone, Data)]

@@ -1,15 +1,23 @@
 [package]
 name = "notepad"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-open = "2.1.2"
+zip = "0.6"
+open = "2.1"
 rust-crypto = "^0.2"
-getrandom = "0.2.6"
-druid = { git = "https://github.com/linebender/druid.git", features = ["im"]}
+named-lock = "0.2"
+thiserror = "1.0"
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+getrandom = { version ="0.2", features = ["std"] }
+reqwest = { version = "0.11", features = ["blocking", "multipart", "json", "serde_json"] }
+uuid = { version = "1.0.0", features = ["v4"] }
+druid = { git = "https://github.com/linebender/druid.git", features = ["im"] }
 druid-shell = { git = "https://github.com/linebender/druid.git" }
 
 [target.'cfg(windows)'.build-dependencies]

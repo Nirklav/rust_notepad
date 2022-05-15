@@ -6,6 +6,7 @@ pub mod information_window;
 pub mod new_file_window;
 pub mod about_window;
 pub mod dialog_window;
+pub mod backup_window;
 
 pub fn primary_screen_center(size: impl Into<Size>) -> Point {
     let monitors = Screen::get_monitors();

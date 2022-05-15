@@ -1,9 +1,9 @@
 use druid::kurbo::{Circle, Line};
 use druid::{theme, RenderContext, Widget, WidgetExt};
 use druid::widget::Painter;
-use crate::state::tabs_state::TabsState;
+use crate::state::tabs::Tabs;
 
-pub fn close_button() -> impl Widget<TabsState> {
+pub fn close_button() -> impl Widget<Tabs> {
     Painter::new(|ctx, _, env| {
         let circle_bounds = ctx.size().to_rect().inset(-2.);
         let cross_bounds = circle_bounds.inset(-5.);

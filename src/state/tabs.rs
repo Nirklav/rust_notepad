@@ -1,54 +1,75 @@
 use std::{fs, collections};
 use std::fs::File;
 use std::io::Write;
-use std::path::Path;
 use druid::Data;
 use druid::im::{HashMap, Vector};
 use crate::state;
 use crate::error::AppError;
-use crate::state::tab_state::TabState;
+use crate::state::tab::Tab;
 
 #[derive(Clone, Data)]
-pub struct TabsState {
-    tabs: HashMap<u64, TabState>,
+pub struct Tabs {
+    tabs: HashMap<u64, Tab>,
     to_remove: Vector<String>,
     rev: u64
 }
 
-impl TabsState {
+impl Tabs {
     pub fn load() -> Result<Self, AppError> {
-        let mut tabs = collections::HashMap::<u64, TabState>::new();
-        let mut rev = 0;
-        let dir = match fs::read_dir(state::DIR) {
-            Ok(p) => p,
-            Err(_) => {
-                fs::create_dir(state::DIR)?;
-                let mut file = File::create(Path::new(state::DIR).join("text.txt"))?;
-                write!(file, "New text")?;
-                fs::read_dir(state::DIR)?
-            }
-        };
-
-        for entity_result in dir {
-            if let Ok(entry) = entity_result {
-                let path = &entry.path();
-                if path.is_file() {
-                    let name = path
-                        .file_stem().ok_or(AppError::internal("Not a file"))?
-                        .to_str().ok_or(AppError::internal("Invalid file name"))?;
-
-                    rev += 1;
-                    let tab = TabState::load(rev, &name)?;
-                    tabs.insert(tab.id, tab);
-                }
-            }
-        }
-
-        Ok(TabsState {
+        let (rev, tabs) = Self::load_tabs()?;
+        Ok(Tabs {
             tabs: HashMap::from(tabs),
             to_remove: Vector::new(),
             rev
         })
+    }
+
+    pub fn reload(&mut self) -> Result<(), AppError> {
+        let (_, tabs) = Self::load_tabs()?;
+
+        for (_, loaded_tab) in tabs {
+            let pair = self.tabs
+                .iter_mut()
+                .find(|p| p.1.name == loaded_tab.name);
+
+            if let Some((_, tab)) = pair {
+                tab.update(&loaded_tab);
+            } else {
+                self.rev += 1;
+                self.tabs.insert(self.rev, loaded_tab);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn load_tabs() -> Result<(u64, collections::HashMap::<u64, Tab>), AppError> {
+        let mut tabs = collections::HashMap::<u64, Tab>::new();
+        let mut rev = 0;
+        let docs_path = state::docs_path()?;
+        let docs = match state::docs(&docs_path) {
+            Ok(p) => p,
+            Err(_) => {
+                fs::create_dir(&docs_path)?;
+                let mut file = File::create(docs_path.join("text.txt"))?;
+                write!(file, "New text")?;
+                state::docs(&docs_path)?
+            }
+        };
+
+        for path in docs {
+            if path.is_file() {
+                let name = path
+                    .file_stem().ok_or(AppError::internal("Not a file"))?
+                    .to_str().ok_or(AppError::internal("Invalid file name"))?;
+
+                rev += 1;
+                let tab = Tab::load(rev, &name)?;
+                tabs.insert(tab.id, tab);
+            }
+        }
+
+        Ok((rev, tabs))
     }
 
     pub fn keys(&self) -> Vec<u64> {
@@ -64,11 +85,11 @@ impl TabsState {
         self.rev
     }
 
-    pub fn get(&self, key: u64) -> &TabState {
+    pub fn get(&self, key: u64) -> &Tab {
         self.tabs.get(&key).expect("Index error")
     }
 
-    pub fn get_mut(&mut self, key: u64) -> &mut TabState {
+    pub fn get_mut(&mut self, key: u64) -> &mut Tab {
         self.tabs.get_mut(&key).expect("Index error")
     }
 
@@ -80,7 +101,7 @@ impl TabsState {
         }
 
         self.rev += 1;
-        let tab = TabState::new(self.rev, name, password)?;
+        let tab = Tab::new(self.rev, name, password)?;
         self.tabs.insert(tab.id, tab);
 
         Ok(())
@@ -99,7 +120,7 @@ impl TabsState {
         Ok(())
     }
 
-    pub fn save(&mut self) -> Result<(), AppError> {
+    pub(super) fn save(&mut self) -> Result<(), AppError> {
         for (_, tab) in &self.tabs {
             tab.save()?;
         }
@@ -107,6 +128,7 @@ impl TabsState {
         for file_name in &self.to_remove {
             fs::remove_file(&file_name)?;
         }
+
         self.to_remove.clear();
 
         Ok(())

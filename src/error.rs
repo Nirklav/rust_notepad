@@ -1,20 +1,35 @@
-use std::error::Error;
-use std::fmt;
-use std::fmt::{Display, Formatter};
 use std::io;
 use std::string::FromUtf8Error;
+use serde_json;
 use getrandom;
 use crypto::symmetriccipher::SymmetricCipherError;
+use thiserror::Error;
+use zip::result::ZipError;
 
-#[derive(fmt::Debug)]
+#[derive(Error, Debug)]
 pub enum AppError {
+    #[error("Internal error: {0}")]
     Internal(&'static str),
+    #[error("File with that name already exist")]
     FileAlreadyExist,
+    #[error("Invalid password")]
     InvalidPassword,
-    Io(io::Error),
+    #[error("Backup file not found")]
+    BackupNotFound,
+    #[error("Io error: {0}")]
+    Io(#[from] io::Error),
+    #[error("Cypher error")]
     Cypher(SymmetricCipherError),
-    Random(getrandom::Error),
-    FromUtf8(FromUtf8Error)
+    #[error("Random error: {0}")]
+    Random(#[from] getrandom::Error),
+    #[error("FromUtf8 error: {0}")]
+    FromUtf8(#[from] FromUtf8Error),
+    #[error("Serde error: {0}")]
+    Serde(#[from] serde_json::Error),
+    #[error("Request error: {0}")]
+    Request(#[from] reqwest::Error),
+    #[error("Zip error: {0}")]
+    Zip(#[from] ZipError)
 }
 
 impl AppError {
@@ -23,50 +38,8 @@ impl AppError {
     }
 }
 
-impl Display for AppError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self {
-            AppError::Internal(s) => s.fmt(f),
-            AppError::Io(e) => e.fmt(f),
-            AppError::FileAlreadyExist => write!(f, "File with that name already exist"),
-            AppError::InvalidPassword => write!(f, "Invalid password"),
-            AppError::Cypher(e) => fmt::Debug::fmt(&e, f),
-            AppError::Random(e) => e.fmt(f),
-            AppError::FromUtf8(e) => e.fmt(f),
-        }
-    }
-}
-
-impl Error for AppError {
-
-}
-
-impl From<io::Error> for AppError {
-    fn from(e: io::Error) -> Self {
-        AppError::Io(e)
-    }
-}
-
 impl From<SymmetricCipherError> for AppError {
     fn from(e: SymmetricCipherError) -> Self {
         AppError::Cypher(e)
-    }
-}
-
-impl From<&'static str> for AppError {
-    fn from(text: &'static str) -> Self {
-        AppError::Internal(text)
-    }
-}
-
-impl From<getrandom::Error> for AppError {
-    fn from(e: getrandom::Error) -> Self {
-        AppError::Random(e)
-    }
-}
-
-impl From<FromUtf8Error> for AppError {
-    fn from(e: FromUtf8Error) -> Self {
-        AppError::FromUtf8(e)
     }
 }

@@ -28,9 +28,13 @@ impl AppDelegate<AppState> for Delegate {
                 Handled::Yes
             },
             c if c.is(commands::SAVE_FILE) => {
-                if let Err(e) = state.tabs.save() {
+                if let Err(e) = state.save() {
                     ctx.new_window(windows::information_window::new(format!("Error: {}", e)));
                 }
+                Handled::Yes
+            },
+            c if c.is(crate::commands::SHOW_BACKUPS) => {
+                ctx.new_window(windows::backup_window::new());
                 Handled::Yes
             },
             c if c.is(commands::SHOW_ABOUT) => {
@@ -63,7 +67,7 @@ impl AppDelegate<AppState> for Delegate {
         _ctx: &mut DelegateCtx) {
         if let Some(main_id) = self.main_id {
             if id == main_id {
-                data.tabs.save().expect("Cannot save file");
+                data.save().expect("Cannot save file");
             }
         }
     }

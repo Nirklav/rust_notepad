@@ -27,6 +27,8 @@ fn menu(_id: Option<WindowId>, _state: &AppState, _env: &Env) -> Menu<AppState> 
             .entry(MenuItem::new("Save all")
                 .command(commands::SAVE_FILE)
                 .hotkey(RawMods::Ctrl, "s"))
+            .entry(MenuItem::new("Backups")
+                .command(crate::commands::SHOW_BACKUPS))
             .entry(MenuItem::new("Exit")
                 .command(commands::CLOSE_ALL_WINDOWS)))
         .entry(MenuItem::new("About")
