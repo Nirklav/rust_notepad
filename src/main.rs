@@ -12,6 +12,7 @@ mod hash;
 mod gen;
 mod backups;
 mod commands;
+mod secure;
 
 use std::env;
 use std::path::PathBuf;

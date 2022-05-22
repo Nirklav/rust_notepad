@@ -4,12 +4,13 @@ use chrono::{Duration, Utc};
 use serde::{Serialize, Deserialize};
 use crate::{AppError, exe_directory};
 use crate::backups::google_drive::token::Token;
+use crate::secure::Secure;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Credentials {
     client_id: String,
     client_secret: String,
-    token: Option<Token>
+    token: Option<Secure<Token>>
 }
 
 impl Credentials {
@@ -20,12 +21,16 @@ impl Credentials {
     }
 
     pub fn update(&mut self, token: Token) -> Result<(), AppError> {
-        self.token = Some(token);
+        self.token = Some(Secure::new(token));
         self.save()
     }
 
     pub fn update_access_token(&mut self, access_token: String, expires_in: i64) -> Result<(), AppError> {
-        let mut token = self.token.as_mut().ok_or(AppError::internal("Token is empty"))?;
+        let mut token = self.token
+            .as_mut()
+            .ok_or(AppError::internal("Token is empty"))?
+            .value_mut();
+
         let now = Utc::now();
 
         token.access_token = access_token;
@@ -55,7 +60,7 @@ impl Credentials {
 
     pub fn access_token(&self) -> &str {
         if let Some(token) = &self.token {
-            &token.access_token
+            &token.value().access_token
         } else {
             ""
         }
@@ -63,7 +68,7 @@ impl Credentials {
 
     pub fn refresh_token(&self) -> &str {
         if let Some(token) = &self.token {
-            &token.refresh_token
+            &token.value().refresh_token
         } else {
             ""
         }
@@ -76,7 +81,7 @@ impl Credentials {
     pub fn is_token_expired(&self) -> bool {
         if let Some(token) = &self.token {
             let now = Utc::now();
-            token.access_token_expired_at < now
+            token.value().access_token_expired_at < now
         } else {
             false
         }
