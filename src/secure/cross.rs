@@ -5,10 +5,12 @@ pub struct CrossCryptBackend;
 
 impl CryptBackend for CrossCryptBackend {
     fn crypt(data: &mut [u8]) -> Result<Vec<u8>, AppError> {
-        todo!()
+        // TODO: crypt
+        Ok(Vec::from(data))
     }
 
     fn decrypt(data: &mut [u8]) -> Result<Vec<u8>, AppError> {
-        todo!()
+        // TODO: decrypt
+        Ok(Vec::from(data))
     }
 }

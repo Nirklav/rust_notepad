@@ -1,8 +1,10 @@
 use std::io::Write;
 use std::ptr;
-use winapi::um::wincrypt::DATA_BLOB;
 use crate::{AppError, gen};
 use crate::secure::CryptBackend;
+
+#[cfg(windows)]
+use winapi::um::wincrypt::DATA_BLOB;
 
 const ENTROPY_SIZE : usize = 64;
 
