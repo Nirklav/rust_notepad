@@ -2,13 +2,18 @@ use druid::{AppDelegate, Command, commands, DelegateCtx, Env, Handled, Target, W
 use crate::{AppState, windows};
 
 pub struct Delegate {
-    main_id: Option<WindowId>
+    main: Option<Window>
+}
+
+pub struct Window {
+    id: WindowId,
+    handle: WindowHandle
 }
 
 impl Delegate {
     pub fn new() -> Self {
         Delegate {
-            main_id: None
+            main: None
         }
     }
 }
@@ -37,6 +42,14 @@ impl AppDelegate<AppState> for Delegate {
                 ctx.new_window(windows::backup_window::new());
                 Handled::Yes
             },
+            c if c.is(crate::commands::SHOW_MAIN_WINDOW) => {
+                if let Some(ref main) = self.main {
+                    main.handle.bring_to_front_and_focus();
+                    Handled::Yes
+                } else {
+                    Handled::No
+                }
+            },
             c if c.is(commands::SHOW_ABOUT) => {
                 ctx.new_window(windows::about_window::new());
                 Handled::Yes
@@ -50,12 +63,16 @@ impl AppDelegate<AppState> for Delegate {
     fn window_added(
         &mut self,
         id: WindowId,
-        _handle: WindowHandle,
+        handle: WindowHandle,
         _data: &mut AppState,
         _env: &Env,
         _ctx: &mut DelegateCtx) {
-        if self.main_id.is_none() {
-            self.main_id = Some(id.clone());
+
+        if self.main.is_none() {
+            self.main = Some(Window {
+                id,
+                handle: handle.clone()
+            });
         }
     }
 
@@ -65,8 +82,8 @@ impl AppDelegate<AppState> for Delegate {
         data: &mut AppState,
         _env: &Env,
         _ctx: &mut DelegateCtx) {
-        if let Some(main_id) = self.main_id {
-            if id == main_id {
+        if let Some(ref main) = self.main {
+            if id == main.id {
                 data.save().expect("Cannot save file");
             }
         }

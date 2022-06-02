@@ -13,6 +13,7 @@ mod gen;
 mod backups;
 mod commands;
 mod secure;
+mod ipc;
 
 use std::env;
 use std::path::PathBuf;
@@ -21,21 +22,34 @@ use named_lock::NamedLock;
 use crate::backups::google_drive::GoogleDrive;
 use crate::delegate::Delegate;
 use crate::error::AppError;
+use crate::ipc::Ipc;
+use crate::ipc::ipc_command::IpcCommand;
 use crate::state::app_state::AppState;
 
 fn main() -> Result<(), PlatformError> {
     let named_lock = convert(NamedLock::create("notepad"))?;
-    let _guard = convert(named_lock.lock())?;
+
+    let _guard = match named_lock.try_lock() {
+        Ok(g) => g,
+        Err(_) => {
+            Ipc::send(IpcCommand::ShowWindow).unwrap();
+            return Ok(())
+        }
+    };
 
     let state = match AppState::load() {
         Ok(s) => s,
         Err(e) => panic!("{}", e)
     };
 
-    AppLauncher::with_window(windows::main_window::new())
+    let launcher = AppLauncher::with_window(windows::main_window::new());
+    let ipc = Ipc::start(launcher.get_external_handle());
+
+    launcher
         .delegate(Delegate::new())
         .launch(state)?;
 
+    drop(ipc);
     Ok(())
 }
 
