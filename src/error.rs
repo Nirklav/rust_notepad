@@ -29,7 +29,9 @@ pub enum AppError {
     #[error("Request error: {0}")]
     Request(#[from] reqwest::Error),
     #[error("Zip error: {0}")]
-    Zip(#[from] ZipError)
+    Zip(#[from] ZipError),
+    #[error("Google drive request client error {0}")]
+    GoogleDriveClientError(u16)
 }
 
 impl AppError {

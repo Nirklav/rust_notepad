@@ -6,7 +6,7 @@ mod api;
 mod id;
 
 use std::path::Path;
-use reqwest::blocking::Client;
+use reqwest::blocking::{Client, Response};
 use crate::AppError;
 use crate::backups::{BackupStorage, Names};
 use crate::backups::google_drive::credentials::Credentials;
@@ -26,6 +26,21 @@ impl GoogleDrive {
     fn backup_file(&mut self, backup_folder: &Id, name: &str) -> Result<Option<Id>, AppError> {
         let mut files = self.list(&name, Some(&backup_folder), false)?;
         Ok(files.pop())
+    }
+
+    fn assert_success(response: &Response) -> Result<(), AppError> {
+        let status = response.status();
+        if status.is_success() {
+            return Ok(());
+        }
+
+        dbg!(response);
+
+        if status.is_client_error() {
+            Err(AppError::GoogleDriveClientError(status.as_u16()))
+        } else {
+            Err(AppError::internal("Request error"))
+        }
     }
 }
 

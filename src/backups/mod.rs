@@ -19,7 +19,7 @@ pub struct Backup<S> {
 impl Backup<GoogleDrive> {
     pub fn google_drive() -> Result<Self, AppError> {
         Ok(Backup {
-            storage: GoogleDrive::authenticate()?
+            storage: GoogleDrive::new()?
         })
     }
 }

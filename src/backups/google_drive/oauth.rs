@@ -1,7 +1,7 @@
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use reqwest::blocking::Client;
-use reqwest::header;
+use reqwest::{header};
 use reqwest::header::HeaderMap;
 use uuid::Uuid;
 use crate::AppError;
@@ -14,20 +14,29 @@ pub const REDIRECT_ADDR : &str = "127.0.0.1:12675";
 pub const SCOPES : &str = "https://www.googleapis.com/auth/drive.file";
 
 impl GoogleDrive {
-    pub fn authenticate() -> Result<Self, AppError> {
+    pub fn new() -> Result<Self, AppError> {
         let mut drive = GoogleDrive {
             credentials: Credentials::load()?,
             client: Client::new()
         };
 
         if drive.credentials.is_token_empty() {
-            let user_consent_url = drive.user_consent_url();
-            open::that(user_consent_url)?;
-            let redirect = Redirect::receive()?;
-            drive.access_token(&redirect.code, &redirect.state)?;
+            drive.authenticate()?;
+        } else {
+            if let Err(AppError::GoogleDriveClientError(_)) = drive.refresh_access_token() {
+                drive.authenticate()?;
+            }
         }
 
         Ok(drive)
+    }
+
+    fn authenticate(&mut self) -> Result<(), AppError> {
+        let user_consent_url = self.user_consent_url();
+        open::that(user_consent_url)?;
+        let redirect = Redirect::receive()?;
+        self.access_token(&redirect.code, &redirect.state)?;
+        Ok(())
     }
 
     fn user_consent_url(&self) -> String {
@@ -62,10 +71,7 @@ impl GoogleDrive {
             .basic_auth(creds.client_id(), Some(creds.client_secret()))
             .send()?;
 
-        if !resp.status().is_success() {
-            dbg!(&resp);
-            return Err(AppError::internal("Request error"))
-        }
+        Self::assert_success(&resp)?;
 
         let raw: RawToken = resp.json()?;
         let token = raw.token().ok_or(AppError::internal("Receive: Token in response is empty"))?;
@@ -103,10 +109,7 @@ impl GoogleDrive {
             .basic_auth(creds.client_id(), Some(creds.client_secret()))
             .send()?;
 
-        if !resp.status().is_success() {
-            dbg!(&resp);
-            return Err(AppError::internal("Request error"))
-        }
+        Self::assert_success(&resp)?;
 
         let raw: RawToken = resp.json()?;
         let access_token = raw.access_token.ok_or(AppError::internal("Access token is empty"))?;

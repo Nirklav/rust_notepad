@@ -3,7 +3,6 @@ use std::io::Write;
 use std::path::Path;
 use reqwest::header;
 use reqwest::blocking::multipart::{Form, Part};
-use reqwest::blocking::Response;
 use serde_json::{json, Value};
 use crate::{AppError, GoogleDrive};
 use crate::backups::google_drive::id::Id;
@@ -136,15 +135,6 @@ impl GoogleDrive {
 
         let bytes = resp.bytes()?;
         file.write(&bytes)?;
-        Ok(())
-    }
-
-    fn assert_success(resp: &Response) -> Result<(), AppError> {
-        if !resp.status().is_success() {
-            dbg!(&resp);
-            return Err(AppError::internal("Request error"))
-        }
-
         Ok(())
     }
 }
