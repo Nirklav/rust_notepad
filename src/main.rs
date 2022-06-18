@@ -46,6 +46,7 @@ fn main() -> Result<(), PlatformError> {
     let ipc = Ipc::start(launcher.get_external_handle());
 
     launcher
+        .log_to_console()
         .delegate(Delegate::new())
         .launch(state)?;
 

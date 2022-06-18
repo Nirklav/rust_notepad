@@ -27,7 +27,7 @@ impl AppDelegate<AppState> for Delegate {
         state: &mut AppState,
         _env: &Env) -> Handled {
 
-        match  &cmd {
+        match &cmd {
             c if c.is(commands::NEW_FILE) => {
                 ctx.new_window(windows::new_file_window::new());
                 Handled::Yes
