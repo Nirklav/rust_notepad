@@ -4,6 +4,8 @@ pub mod cross;
 use std::fmt;
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use base64::Engine;
+use base64::engine::general_purpose;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{DeserializeOwned, Visitor};
 use crate::AppError;
@@ -66,7 +68,7 @@ impl<B, V> Serialize for _Secure<B, V>
     {
         let mut json = tri!(ser, serde_json::to_string(&self.value));
         let encrypted = tri!(ser, B::crypt(unsafe { json.as_bytes_mut() }));
-        let base64 = base64::encode(encrypted);
+        let base64 = general_purpose::STANDARD.encode(encrypted);
         serializer.serialize_str(&base64)
     }
 }
@@ -81,7 +83,7 @@ impl<'de, B, V> Deserialize<'de> for _Secure<B, V>
             D: Deserializer<'de>
     {
         let base64 = deserializer.deserialize_string(StringVisitor)?;
-        let mut bytes = tri!(de, base64::decode(base64));
+        let mut bytes = tri!(de, general_purpose::STANDARD.decode(base64));
         let decrypted = tri!(de, B::decrypt(&mut bytes));
         let value = tri!(de, serde_json::from_slice::<V>(&decrypted));
         Ok(_Secure::new(value))

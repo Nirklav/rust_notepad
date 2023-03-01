@@ -1,3 +1,4 @@
+use std::io;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use reqwest::blocking::Client;
@@ -126,11 +127,27 @@ struct Redirect {
 impl Redirect {
     pub fn receive() -> Result<Self, AppError> {
         let listener = TcpListener::bind(REDIRECT_ADDR)?;
-        let (mut stream, _) = listener.accept()?;
 
-        let request = Self::read(&mut stream)?;
-        Self::write(&mut stream)?;
-        Self::parse(request)
+        loop {
+            for stream in listener.incoming() {
+                match stream {
+                    Ok(mut s) => {
+                        let request = Self::read(&mut s)?;
+                        Self::write(&mut s)?;
+                        return Self::parse(request);
+                    }
+                    Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                        // wait until network socket is ready, typically implemented
+                        // via platform-specific APIs such as epoll or IOCP
+
+                        continue;
+                    }
+                    Err(_e) => {
+                        continue;
+                    },
+                }
+            };
+        }
     }
 
     fn read(stream: &mut TcpStream) -> Result<Vec<u8>, AppError> {
